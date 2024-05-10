@@ -29,10 +29,12 @@ async function run() {
         
         // database collection 
         const jobsCollection = client.db('assignment_11').collection('Jobs');
+        const postedJobsCollection = client.db('assignment_11').collection('postedjobs');
 
         
     
          // service related api
+
          // get all jobs
          app.get('/jobs', async (req, res) => {
             let query = {};
@@ -40,6 +42,22 @@ async function run() {
                 query = { job_type: req.query.job_type }
             }
             const result = await jobsCollection.find(query).toArray();
+            res.send(result);
+        })
+
+         // get single job data
+         app.get('/jobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await jobsCollection.findOne(query);
+            res.send(result);
+        })
+
+
+         // Postedjobs 
+         app.post('/postedjobs', async (req, res) => {
+            const newItems = req.body;
+            const result = await postedJobsCollection.insertOne(newItems);
             res.send(result);
         })
 
