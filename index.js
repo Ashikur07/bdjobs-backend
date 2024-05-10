@@ -26,17 +26,17 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        
+
         // database collection 
         const jobsCollection = client.db('assignment_11').collection('Jobs');
         const postedJobsCollection = client.db('assignment_11').collection('postedjobs');
 
-        
-    
-         // service related api
 
-         // get all jobs
-         app.get('/jobs', async (req, res) => {
+
+        // service related api
+
+        // get all jobs
+        app.get('/jobs', async (req, res) => {
             let query = {};
             if (req.query?.job_type) {
                 query = { job_type: req.query.job_type }
@@ -45,8 +45,8 @@ async function run() {
             res.send(result);
         })
 
-         // get single job data
-         app.get('/jobs/:id', async (req, res) => {
+        // get single job data
+        app.get('/jobs/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await jobsCollection.findOne(query);
@@ -54,10 +54,28 @@ async function run() {
         })
 
 
-         // Postedjobs 
-         app.post('/postedjobs', async (req, res) => {
+        // Postedjobs 
+        app.post('/postedjobs', async (req, res) => {
             const newItems = req.body;
             const result = await postedJobsCollection.insertOne(newItems);
+            res.send(result);
+        })
+
+        // get all postedjobs
+        app.get('/postedjobs', async (req, res) => {
+            let query = {};
+            if (req.query?.email) {
+                query = {email: req.query.email}
+            }
+            const result = await postedJobsCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        // get single postedjobs data
+        app.get('/postedjobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await postedJobsCollection.findOne(query);
             res.send(result);
         })
 
