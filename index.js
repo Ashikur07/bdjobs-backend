@@ -30,6 +30,7 @@ async function run() {
         // database collection 
         const jobsCollection = client.db('assignment_11').collection('Jobs');
         const postedJobsCollection = client.db('assignment_11').collection('postedjobs');
+        const applyJobsCollection = client.db('assignment_11').collection('applyJobs');
 
 
 
@@ -52,7 +53,6 @@ async function run() {
             const result = await jobsCollection.findOne(query);
             res.send(result);
         })
-
 
         // Postedjobs 
         app.post('/postedjobs', async (req, res) => {
@@ -84,6 +84,40 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await postedJobsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        // update posted jobs information
+         app.put('/postedjobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updatedJobs = req.body;
+            console.log(updatedJobs);
+
+            const jobs = {
+                $set: {
+                    job_title: updatedJobs.job_title,
+                    job_type: updatedJobs.job_type,
+                    banner: updatedJobs.banner,
+                    salary_range: updatedJobs.salary_range,
+                    job_posting_date: updatedJobs.job_posting_date,
+                    application_deadline: updatedJobs.application_deadline,
+                    job_applicants_number: updatedJobs.job_applicants_number,
+                    description: updatedJobs.description,
+                    name: updatedJobs.name,
+                    email: updatedJobs.email,
+                }
+            }
+
+            const result = await postedJobsCollection.updateOne(filter, jobs, options);
+            res.send(result);
+        })
+
+        //apply job data post
+        app.post('/applyJobs', async (req, res) => {
+            const newItems = req.body;
+            const result = await applyJobsCollection.insertOne(newItems);
             res.send(result);
         })
 
