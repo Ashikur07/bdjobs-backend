@@ -65,7 +65,7 @@ async function run() {
         app.get('/postedjobs', async (req, res) => {
             let query = {};
             if (req.query?.email) {
-                query = {email: req.query.email}
+                query = { email: req.query.email }
             }
             const result = await postedJobsCollection.find(query).toArray();
             res.send(result);
@@ -88,7 +88,7 @@ async function run() {
         })
 
         // update posted jobs information
-         app.put('/postedjobs/:id', async (req, res) => {
+        app.put('/postedjobs/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
             const options = { upsert: true };
@@ -118,6 +118,16 @@ async function run() {
         app.post('/applyJobs', async (req, res) => {
             const newItems = req.body;
             const result = await applyJobsCollection.insertOne(newItems);
+            res.send(result);
+        })
+
+        // get applyjobs all data with use query
+        app.get('/applyJobs', async (req, res) => {
+            let query = {};
+            if (req.query?.applyr_email) {
+                query = { applyr_email: req.query.applyr_email }
+            }
+            const result = await applyJobsCollection.find(query).toArray();
             res.send(result);
         })
 
