@@ -8,7 +8,14 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+        'http://localhost:5174',
+    ],
+    credentials: true
+}));
+
 app.use(express.json());
 // app.use(cookieParser());
 
@@ -112,6 +119,12 @@ async function run() {
 
             const result = await postedJobsCollection.updateOne(filter, jobs, options);
             res.send(result);
+
+            // if (result.modifiedCount === 1) {
+            //     const applyJobsFilter = { _id: new ObjectId(id) };
+            //     const applyJobsUpdate = { $inc: { job_applicants_number: 1 } };
+            //     await applyJobsCollection.updateOne(applyJobsFilter, applyJobsUpdate);
+            // }
         })
 
         //apply job data post
@@ -129,6 +142,39 @@ async function run() {
             }
             const result = await applyJobsCollection.find(query).toArray();
             res.send(result);
+        })
+
+        // add a patch method
+        app.patch('/postedjobs/:id', (req, res) => {
+            const jobId = req.params.id;
+            const filter = { _id: new ObjectId(jobId) };
+            const update = { $inc: { job_applicants_number: 1 } };
+            postedJobsCollection.updateOne(filter, update, (err, result) => {
+                if (err) {
+                    console.error('Error updating job application count:', err);
+                    res.status(500).send('Error updating job application count');
+                    return;
+                }
+                console.log('Job application count updated successfully');
+                res.send('Job application count updated successfully');      
+            });
+        })
+
+
+        // add a patch method
+        app.patch('/jobs/:id', (req, res) => {
+            const jobId = req.params.id;
+            const filter = { _id: new ObjectId(jobId) };
+            const update = { $inc: { job_applicants_number: 1 } };
+            jobsCollection.updateOne(filter, update, (err, result) => {
+                if (err) {
+                    console.error('Error updating job application count:', err);
+                    res.status(500).send('Error updating job application count');
+                    return;
+                }
+                console.log('Job application count updated successfully');
+                res.send('Job application count updated successfully');      
+            });
         })
 
 
