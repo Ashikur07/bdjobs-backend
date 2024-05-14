@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-// const jwt = require('jsonwebtoken');
-// const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
@@ -17,7 +17,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
-// app.use(cookieParser());
+app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ny1xaie.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -30,6 +30,29 @@ const client = new MongoClient(uri, {
     }
 });
 
+// middlewares 
+const logger = (req, res, next) =>{
+    console.log('log: info', req.method, req.url);
+    next();
+}
+
+const verifyToken = (req, res, next) => {
+    const token = req?.cookies?.token;
+
+    if (!token) {
+        return res.status(401).send({ message: 'unauthorized access' })
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'unauthorized access' })
+        }
+        req.user = decoded;
+        next();
+    })
+}
+
+
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -39,6 +62,26 @@ async function run() {
         const postedJobsCollection = client.db('assignment_11').collection('postedjobs');
         const applyJobsCollection = client.db('assignment_11').collection('applyJobs');
 
+
+        // auth related api
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            console.log('user for token', user)
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
+            })
+                .send({ success: true });
+        })
+
+        app.post('/logout', async (req, res) => {
+            const user = req.body;
+            console.log('logging out', user);
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+        })
 
 
         // service related api
@@ -135,7 +178,13 @@ async function run() {
         })
 
         // get applyjobs all data with use query
-        app.get('/applyJobs', async (req, res) => {
+        app.get('/applyJobs', logger,verifyToken, async (req, res) => {
+
+            console.log('token owner info', req.query)
+            if (req.user.email !== req.query.applyr_email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
             let query = {};
             if (req.query?.applyr_email) {
                 query = { applyr_email: req.query.applyr_email }
@@ -156,7 +205,7 @@ async function run() {
                     return;
                 }
                 console.log('Job application count updated successfully');
-                res.send('Job application count updated successfully');      
+                res.send('Job application count updated successfully');
             });
         })
 
@@ -173,7 +222,7 @@ async function run() {
                     return;
                 }
                 console.log('Job application count updated successfully');
-                res.send('Job application count updated successfully');      
+                res.send('Job application count updated successfully');
             });
         })
 
