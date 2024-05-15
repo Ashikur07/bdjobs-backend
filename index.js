@@ -12,6 +12,7 @@ app.use(cors({
     origin: [
         'http://localhost:5173',
         'http://localhost:5174',
+        'https://assignment-11-by-ashik.netlify.app'
     ],
     credentials: true
 }));
@@ -31,7 +32,7 @@ const client = new MongoClient(uri, {
 });
 
 // middlewares 
-const logger = (req, res, next) =>{
+const logger = (req, res, next) => {
     console.log('log: info', req.method, req.url);
     next();
 }
@@ -84,8 +85,10 @@ async function run() {
         })
 
 
-        // service related api
 
+
+        // service related api
+        // job related all operation
         // get all jobs
         app.get('/jobs', async (req, res) => {
             let query = {};
@@ -104,15 +107,48 @@ async function run() {
             res.send(result);
         })
 
-        // Postedjobs 
+        // add a patch method
+        app.patch('/jobs/:id', (req, res) => {
+            const jobId = req.params.id;
+            const filter = { _id: new ObjectId(jobId) };
+            const update = { $inc: { job_applicants_number: 1 } };
+            jobsCollection.updateOne(filter, update, (err, result) => {
+                if (err) {
+                    console.error('Error updating job application count:', err);
+                    res.status(500).send('Error updating job application count');
+                    return;
+                }
+                console.log('Job application count updated successfully');
+                res.send('Job application count updated successfully');
+            });
+        })
+
+
+
+
+
+        // Posted Job all operation here
+        // Postedjobs post method
         app.post('/postedjobs', async (req, res) => {
             const newItems = req.body;
             const result = await postedJobsCollection.insertOne(newItems);
             res.send(result);
         })
 
-        // get all postedjobs
+         // get all posted jobs
+         app.get('/postedjobs', async (req, res) => {
+            const cursor = postedJobsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        // get some posteded jobs
         app.get('/postedjobs', async (req, res) => {
+
+            if (req.user.email !== req.query.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
             let query = {};
             if (req.query?.email) {
                 query = { email: req.query.email }
@@ -120,6 +156,7 @@ async function run() {
             const result = await postedJobsCollection.find(query).toArray();
             res.send(result);
         })
+
 
         // get single postedjobs data
         app.get('/postedjobs/:id', async (req, res) => {
@@ -170,29 +207,6 @@ async function run() {
             // }
         })
 
-        //apply job data post
-        app.post('/applyJobs', async (req, res) => {
-            const newItems = req.body;
-            const result = await applyJobsCollection.insertOne(newItems);
-            res.send(result);
-        })
-
-        // get applyjobs all data with use query
-        app.get('/applyJobs', logger,verifyToken, async (req, res) => {
-
-            console.log('token owner info', req.query)
-            if (req.user.email !== req.query.applyr_email) {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
-
-            let query = {};
-            if (req.query?.applyr_email) {
-                query = { applyr_email: req.query.applyr_email }
-            }
-            const result = await applyJobsCollection.find(query).toArray();
-            res.send(result);
-        })
-
         // add a patch method
         app.patch('/postedjobs/:id', (req, res) => {
             const jobId = req.params.id;
@@ -210,20 +224,29 @@ async function run() {
         })
 
 
-        // add a patch method
-        app.patch('/jobs/:id', (req, res) => {
-            const jobId = req.params.id;
-            const filter = { _id: new ObjectId(jobId) };
-            const update = { $inc: { job_applicants_number: 1 } };
-            jobsCollection.updateOne(filter, update, (err, result) => {
-                if (err) {
-                    console.error('Error updating job application count:', err);
-                    res.status(500).send('Error updating job application count');
-                    return;
-                }
-                console.log('Job application count updated successfully');
-                res.send('Job application count updated successfully');
-            });
+
+
+        // apply job related all data 
+        //apply job data post
+        app.post('/applyJobs', async (req, res) => {
+            const newItems = req.body;
+            const result = await applyJobsCollection.insertOne(newItems);
+            res.send(result);
+        })
+
+        // get applyjobs all data with use query
+        app.get('/applyJobs', logger, verifyToken, async (req, res) => {
+
+            if (req.user.email !== req.query.applyr_email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
+            let query = {};
+            if (req.query?.applyr_email) {
+                query = { applyr_email: req.query.applyr_email }
+            }
+            const result = await applyJobsCollection.find(query).toArray();
+            res.send(result);
         })
 
 
@@ -235,6 +258,8 @@ async function run() {
         // await client.close();
     }
 }
+
+
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
