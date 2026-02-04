@@ -143,7 +143,7 @@ async function run() {
         })
 
         // get some posteded jobs
-        app.get('/postedjobs', async (req, res) => {
+        app.get('/postedjobs',logger, verifyToken, async (req, res) => {
 
             if (req.user.email !== req.query.email) {
                 return res.status(403).send({ message: 'forbidden access' })
