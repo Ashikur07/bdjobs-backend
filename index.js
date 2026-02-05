@@ -264,9 +264,9 @@ async function run() {
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
-    res.send('doctor is running')
+    res.send('BD Jobs  is running')
 })
 
 app.listen(port, () => {
-    console.log(`Car Doctor Server is running on port ${port}`)
+    console.log(`BD Jobs Server is running on port ${port}`)
 })
