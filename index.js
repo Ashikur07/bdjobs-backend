@@ -12,7 +12,8 @@ app.use(cors({
     origin: [
         'http://localhost:5173',
         'http://localhost:5174',
-        'https://assignment-11-by-ashik.netlify.app'
+        'https://assignment-11-by-ashik.netlify.app',
+        'https://bdjobs-delta.vercel.app'
     ],
     credentials: true
 }));
