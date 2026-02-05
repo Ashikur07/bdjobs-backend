@@ -14,7 +14,7 @@ app.use(cors({
         'http://localhost:5174',
         'https://assignment-11-by-ashik.netlify.app',
         'https://bdjobs-delta.vercel.app',
-        'https://bdjobs-24.vercel.app/'
+        'https://bdjobs-24.vercel.app'
     ],
     credentials: true
 }));
